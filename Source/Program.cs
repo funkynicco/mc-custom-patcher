@@ -1,4 +1,13 @@
-﻿using Microsoft.Win32.SafeHandles;
+﻿/*
+ * Copyright (C) Nicco, 2013
+ * 
+ * You may use, distribute or modify the following source code and all its content as long as the following tag stays.
+ * 
+ * Origin: http://mcvoltz.nprog.com/patch/
+ * 
+ */
+
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
