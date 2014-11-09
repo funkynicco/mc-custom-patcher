@@ -11,6 +11,7 @@ using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -25,6 +26,9 @@ namespace MC_Custom_Updater
 {
     static class Program
     {
+        public const string PatchUrl = "http://mcp.nprog.com";
+        public const string RootDirectory = @"Instances\TheCrackPack";
+
         private static uint _executableCrc = 0;
         private static bool _loadCrc = true;
         private static object _lock = new object();
@@ -52,6 +56,17 @@ namespace MC_Custom_Updater
 
         static void Main()
         {
+            var cultureInfo = new CultureInfo("en-us");
+
+            cultureInfo.DateTimeFormat.LongDatePattern = "yyyy-MM-dd";
+            cultureInfo.DateTimeFormat.LongTimePattern = "HH:mm";
+            cultureInfo.DateTimeFormat.FullDateTimePattern = "yyyy-MM-dd HH:mm:ss";
+            cultureInfo.DateTimeFormat.ShortDatePattern = "yyyy-MM-dd";
+            cultureInfo.DateTimeFormat.ShortTimePattern = "HH:mm";
+
+            Thread.CurrentThread.CurrentUICulture = cultureInfo;
+            Thread.CurrentThread.CurrentCulture = cultureInfo;
+
             Random = new Random();
             bool silent = false;
 
@@ -85,7 +100,7 @@ namespace MC_Custom_Updater
                         dlg.ListXml = MakeList.Create();
                         dlg.ShowDialog();
                     }
-                    
+
                     return;
                 }
                 else if (args.Length >= 2 && args[1] == "-silent") // So it can be used with batching, if no update is needed itl automatically close.
@@ -98,9 +113,30 @@ namespace MC_Custom_Updater
                 MessageBox.Show(ex.Message, "MC Patcher", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
+            var currentDirectory = Environment.CurrentDirectory;
+            Environment.CurrentDirectory = Path.IsPathRooted(RootDirectory) ? RootDirectory : Path.Combine(currentDirectory, RootDirectory);
+
+            try
+            {
+                VerifyStructure();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Verifying structure",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                Environment.CurrentDirectory = currentDirectory;
+                return;
+            }
+
             var patchList = Preloader.Load();
             if (patchList == null)
+            {
+                Environment.CurrentDirectory = currentDirectory;
                 return;
+            }
 
             if (patchList.FinalActions.Count > 0)
                 Application.Run(new MainForm(patchList));
@@ -112,6 +148,24 @@ namespace MC_Custom_Updater
                 // Clean up
                 if (Directory.Exists("mcpatcher_temp"))
                     Directory.Delete("mcpatcher_temp", true);
+            }
+            catch { }
+
+            Environment.CurrentDirectory = currentDirectory;
+        }
+
+        static void VerifyStructure()
+        {
+            if(!File.Exists(@"..\..\ATLauncher.exe"))
+                throw new Exception(@"ATLauncher.exe was not found, make sure the updater is placed next to ATLauncher.exe");
+
+            if (!Directory.Exists(@"..\..\Instances\TheCrackPack"))
+                throw new Exception(@"..\..\Instances\TheCrackPack folder was not found, make sure you've got TheCrackPack version 2.0.0");
+
+            try
+            {
+                if (!Directory.Exists("Flan"))
+                    Directory.CreateDirectory("Flan");
             }
             catch { }
         }

@@ -24,7 +24,6 @@ namespace MC_Custom_Updater
 {
     public partial class MainForm : Form
     {
-        public const string PatchUrl = "http://mcvoltz.nprog.com/patch";
         private PatchList _list = null;
 
         public MainForm(PatchList list)
@@ -36,7 +35,7 @@ namespace MC_Custom_Updater
 
             listView1.BeginUpdate();
             listView1.Items.Clear();
-            foreach (FileAction action in list.FinalActions)
+            foreach (var action in list.FinalActions)
             {
                 var item = listView1.Items.Add(action.File);
                 item.SubItems.Add(Enum.GetName(typeof(FileActionResult), action.Action));
@@ -59,12 +58,12 @@ namespace MC_Custom_Updater
         private void button1_Click(object sender, EventArgs e)
         {
             // Generate a list
-            LinkedList<PatchFile> files = new LinkedList<PatchFile>();
+            var files = new LinkedList<PatchFile>();
             foreach (ListViewItem lvi in listView1.Items)
             {
                 if (lvi.Checked)
                 {
-                    FileAction action = (FileAction)lvi.Tag;
+                    var action = (FileAction)lvi.Tag;
                     if (action.Action == FileActionResult.Remove)
                     {
                         try

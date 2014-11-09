@@ -31,10 +31,10 @@ namespace MC_Custom_Updater
             {
                 form.Show();
 
-                Thread thread = new Thread(FetchAndParseListThread);
+                var thread = new Thread(FetchAndParseListThread);
                 thread.Start(param);
 
-                PatcherFetchState pfs = PatcherFetchState.Connecting;
+                var pfs = PatcherFetchState.Connecting;
                 while (!param.Finished.WaitOne(100))
                 {
                     if (param.State != pfs)
@@ -63,23 +63,23 @@ namespace MC_Custom_Updater
 
         static void FetchAndParseListThread(object obj)
         {
-            ThreadParameters param = (ThreadParameters)obj;
+            var param = (ThreadParameters)obj;
 
             param.State = PatcherFetchState.Connecting;
 
             try
             {
-                var request = HttpWebRequest.Create(MainForm.PatchUrl + "/list.xml");
+                var request = HttpWebRequest.Create(Program.PatchUrl + "/list.xml");
                 using (var response = request.GetResponse())
                 {
                     param.State = PatcherFetchState.Downloading;
                     using (var stream = new StreamReader(response.GetResponseStream()))
                     {
-                        string data = stream.ReadToEnd();
+                        var data = stream.ReadToEnd();
 
                         param.State = PatcherFetchState.Parsing;
 
-                        XmlDocument doc = new XmlDocument();
+                        var doc = new XmlDocument();
                         doc.LoadXml(data);
 
                         foreach (XmlNode node in doc.ChildNodes)
@@ -94,15 +94,16 @@ namespace MC_Custom_Updater
                 }
 
                 // parse
-                HashSet<string> configHashTree = GetFileTree("config");
-                HashSet<string> coreModsHashTree = GetFileTree("coremods");
-                HashSet<string> modsHashTree = GetFileTree("mods");
+                //var configHashTree = GetFileTree("config");
+                var jarModsHashTree = GetFileTree("jarmods");
+                var modsHashTree = GetFileTree("mods");
+                var flanHashTree = GetFileTree("Flan");
 
                 // do a comparision against param.PatchList
-                CompareHashSets(param.PatchList.IgnoredDirectories, param.PatchList.ConfigMode, configHashTree, param.PatchList.ConfigHashTree, param.PatchList.FinalActions);
-                CompareHashSets(param.PatchList.IgnoredDirectories, param.PatchList.CoreModsMode, coreModsHashTree, param.PatchList.CoreModsHashTree, param.PatchList.FinalActions);
+                //CompareHashSets(param.PatchList.IgnoredDirectories, param.PatchList.ConfigMode, configHashTree, param.PatchList.ConfigHashTree, param.PatchList.FinalActions);
+                CompareHashSets(param.PatchList.IgnoredDirectories, param.PatchList.JarModsMode, jarModsHashTree, param.PatchList.JarModsHashTree, param.PatchList.FinalActions);
                 CompareHashSets(param.PatchList.IgnoredDirectories, param.PatchList.ModsMode, modsHashTree, param.PatchList.ModsHashTree, param.PatchList.FinalActions);
-
+                CompareHashSets(param.PatchList.IgnoredDirectories, param.PatchList.FlanMode, flanHashTree, param.PatchList.FlanHashTree, param.PatchList.FinalActions);
 
                 param.State = PatcherFetchState.Finished;
             }
@@ -268,9 +269,9 @@ namespace MC_Custom_Updater
 
         public static PatchFile FromXml(PatchDirectory directory, XmlNode node)
         {
-            XmlAttribute name = node.Attributes["Name"];
-            XmlAttribute crc = node.Attributes["Crc"];
-            XmlAttribute patchurl = node.Attributes["PatchUrl"];
+            var name = node.Attributes["Name"];
+            var crc = node.Attributes["Crc"];
+            var patchurl = node.Attributes["PatchUrl"];
 
             uint _crc;
 
@@ -280,7 +281,7 @@ namespace MC_Custom_Updater
                 uint.TryParse(crc.Value, out _crc))
             {
                 string url = patchurl.Value
-                    .Replace("{PatchUrl}", MainForm.PatchUrl)
+                    .Replace("{PatchUrl}", Program.PatchUrl)
                     .Replace("{Name}", name.Value)
                     .Replace("{Crc}", crc.Value);
 
@@ -329,8 +330,8 @@ namespace MC_Custom_Updater
 
         public static PatchDirectory FromXml(PatchList list, PatchDirectory parent, XmlNode node)
         {
-            XmlAttribute name = node.Attributes["Name"];
-            XmlAttribute removeUnpatchedFiles = node.Attributes["RemoveUnpatchedFiles"];
+            var name = node.Attributes["Name"];
+            var removeUnpatchedFiles = node.Attributes["RemoveUnpatchedFiles"];
 
             if (name != null)
             {
@@ -371,17 +372,22 @@ namespace MC_Custom_Updater
     {
         public uint PatcherCrc { get; private set; }
 
-        public PatchListMode ConfigMode { get; private set; }
+        /*public PatchListMode ConfigMode { get; private set; }
         public PatchDirectory Config { get; private set; }
-        public Dictionary<string, PatchFile> ConfigHashTree { get; private set; }
+        public Dictionary<string, PatchFile> ConfigHashTree { get; private set; }*/
 
-        public PatchListMode CoreModsMode { get; private set; }
-        public PatchDirectory CoreMods { get; private set; }
-        public Dictionary<string, PatchFile> CoreModsHashTree { get; private set; }
+        public PatchListMode JarModsMode { get; private set; }
+        public PatchDirectory JarMods { get; private set; }
+        public Dictionary<string, PatchFile> JarModsHashTree { get; private set; }
 
         public PatchListMode ModsMode { get; private set; }
         public PatchDirectory Mods { get; private set; }
         public Dictionary<string, PatchFile> ModsHashTree { get; private set; }
+
+        // Flan
+        public PatchListMode FlanMode { get; private set; }
+        public PatchDirectory FlanMods { get; private set; }
+        public Dictionary<string, PatchFile> FlanHashTree { get; private set; }
 
         /// <summary>
         /// Gets the compiled list of actions to be accepted.
@@ -397,17 +403,21 @@ namespace MC_Custom_Updater
         {
             PatcherCrc = patchercrc;
 
-            ConfigMode = PatchListMode.Partial;
+            /*ConfigMode = PatchListMode.Partial;
             Config = new PatchDirectory(null, "config");
-            ConfigHashTree = new Dictionary<string, PatchFile>();
+            ConfigHashTree = new Dictionary<string, PatchFile>();*/
 
-            CoreModsMode = PatchListMode.Identical;
-            CoreMods = new PatchDirectory(null, "coremods");
-            CoreModsHashTree = new Dictionary<string, PatchFile>();
+            JarModsMode = PatchListMode.Identical;
+            JarMods = new PatchDirectory(null, "jarmods");
+            JarModsHashTree = new Dictionary<string, PatchFile>();
 
             ModsMode = PatchListMode.Identical;
             Mods = new PatchDirectory(null, "mods");
             ModsHashTree = new Dictionary<string, PatchFile>();
+
+            FlanMode = PatchListMode.Identical;
+            FlanMods = new PatchDirectory(null, "Flan");
+            FlanHashTree = new Dictionary<string, PatchFile>();
 
             FinalActions = new LinkedList<FileAction>();
             IgnoredDirectories = new HashSet<string>();
@@ -435,14 +445,14 @@ namespace MC_Custom_Updater
                                 "If you click No, MCPatcher will continue but may or may not be stable.",
                                 "MCPatcher", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
                             {
-                                Process.Start(MainForm.PatchUrl);
+                                Process.Start(Program.PatchUrl);
                                 Environment.Exit(0);
                             }
                         }
                     }
                 }
-                
-                if (node.Name == "Config")
+
+                /*if (node.Name == "Config")
                 {
                     XmlAttribute _mode = node.Attributes["Mode"];
                     PatchListMode mode = PatchListMode.Partial;
@@ -463,23 +473,24 @@ namespace MC_Custom_Updater
                         }
                     }
                 }
-                else if (node.Name == "CoreMods")
+                else */
+                if (node.Name == "JarMods")
                 {
                     XmlAttribute _mode = node.Attributes["Mode"];
                     PatchListMode mode = PatchListMode.Partial;
                     if (_mode != null &&
                         Enum.TryParse(_mode.Value, out mode))
                     {
-                        list.CoreModsMode = mode;
+                        list.JarModsMode = mode;
                         foreach (XmlNode child in node.ChildNodes)
                         {
                             if (child.Name == "File")
                             {
-                                list.CoreMods.Files.AddLast(PatchFile.FromXml(list.CoreMods, child));
+                                list.JarMods.Files.AddLast(PatchFile.FromXml(list.JarMods, child));
                             }
                             else if (child.Name == "Directory")
                             {
-                                list.CoreMods.Subdirectories.AddLast(PatchDirectory.FromXml(list, list.CoreMods, child));
+                                list.JarMods.Subdirectories.AddLast(PatchDirectory.FromXml(list, list.JarMods, child));
                             }
                         }
                     }
@@ -505,6 +516,27 @@ namespace MC_Custom_Updater
                         }
                     }
                 }
+                else if (node.Name == "Flan")
+                {
+                    var _mode = node.Attributes["Mode"];
+                    var mode = PatchListMode.Partial;
+                    if (_mode != null &&
+                        Enum.TryParse(_mode.Value, out mode))
+                    {
+                        list.FlanMode = mode;
+                        foreach (XmlNode child in node.ChildNodes)
+                        {
+                            if (child.Name == "File")
+                            {
+                                list.FlanMods.Files.AddLast(PatchFile.FromXml(list.FlanMods, child));
+                            }
+                            else if (child.Name == "Directory")
+                            {
+                                list.FlanMods.Subdirectories.AddLast(PatchDirectory.FromXml(list, list.FlanMods, child));
+                            }
+                        }
+                    }
+                }
             }
 
             list.CreateVirtualHashTree();
@@ -522,13 +554,15 @@ namespace MC_Custom_Updater
 
         private void CreateVirtualHashTree()
         {
-            ConfigHashTree.Clear();
-            CoreModsHashTree.Clear();
+            //ConfigHashTree.Clear();
+            JarModsHashTree.Clear();
             ModsHashTree.Clear();
+            FlanHashTree.Clear();
 
-            HashTreeWalkDirectory(Config, ConfigHashTree);
-            HashTreeWalkDirectory(CoreMods, CoreModsHashTree);
+            //HashTreeWalkDirectory(Config, ConfigHashTree);
+            HashTreeWalkDirectory(JarMods, JarModsHashTree);
             HashTreeWalkDirectory(Mods, ModsHashTree);
+            HashTreeWalkDirectory(FlanMods, FlanHashTree);
         }
 
         public PatchFile FindFile(string filename)
@@ -536,11 +570,13 @@ namespace MC_Custom_Updater
             filename = filename.ToLower();
             PatchFile file = null;
 
-            if (ConfigHashTree.TryGetValue(filename, out file))
-                return file;
-            if (CoreModsHashTree.TryGetValue(filename, out file))
+            /*if (ConfigHashTree.TryGetValue(filename, out file))
+                return file;*/
+            if (JarModsHashTree.TryGetValue(filename, out file))
                 return file;
             if (ModsHashTree.TryGetValue(filename, out file))
+                return file;
+            if (FlanHashTree.TryGetValue(filename, out file))
                 return file;
 
             return file;

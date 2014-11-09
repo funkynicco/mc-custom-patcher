@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,6 +47,14 @@ namespace MC_Custom_Updater
         {
             InitializeComponent();
             richTextBox1.Font = _regularFont;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            // save ...
+            File.WriteAllText("list.xml", richTextBox1.Text);
+
+            DialogResult = DialogResult.OK;
         }
     }
 }

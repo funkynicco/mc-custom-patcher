@@ -67,6 +67,7 @@
     <Compile Include="Interface\ShowListDlg.Designer.cs">
       <DependentUpon>ShowListDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Source\ProgressFile.cs" />
     <Compile Include="Source\SyntaxTagger.cs" />
     <Compile Include="Interface\Updater.cs">
       <SubType>Form</SubType>

@@ -38,7 +38,9 @@ namespace MC_Custom_Updater
                 "coremods",
                 "mods",
                 "directory",
-                "file"
+                "file",
+                "jarmods",
+                "flan"
             });
         }
 
@@ -72,7 +74,7 @@ namespace MC_Custom_Updater
 
                     string word = code.Substring(begin, i - begin).ToLower();
                     Debug.WriteLine(word);
-                    if (_words.Contains(word))
+                    //if (_words.Contains(word))
                         tags.Add(new SyntaxTag(begin, i - begin));
                 }
 

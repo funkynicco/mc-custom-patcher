@@ -41,15 +41,15 @@ namespace MC_Custom_Updater
         public static uint ComputeFile(string filename, uint seed = Seed)
         {
             byte[] buffer = new byte[1048576];
-            FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read);
-            while (fs.Position < fs.Length)
+            using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
             {
-                int read = fs.Read(buffer, 0, (int)Math.Min(fs.Length - fs.Position, buffer.Length));
-                for (int i = 0; i < read; ++i)
-                    seed = (seed >> 8) ^ Table[buffer[i] ^ seed & 0xff];
+                while (fs.Position < fs.Length)
+                {
+                    int read = fs.Read(buffer, 0, (int)Math.Min(fs.Length - fs.Position, buffer.Length));
+                    for (int i = 0; i < read; ++i)
+                        seed = (seed >> 8) ^ Table[buffer[i] ^ seed & 0xff];
+                }
             }
-            fs.Close();
-            fs.Dispose();
 
             return seed;
         }

@@ -66,19 +66,24 @@ namespace MC_Custom_Updater
                 "\t-->\r\n\r\n";
 
             // Config
-            output += "\t<Config Mode=\"Partial\">\r\n";
-            WalkDirectories(2, "config", ref output);
-            output += "\t</Config>\r\n\r\n";
+            //output += "\t<Config Mode=\"Partial\">\r\n";
+            //WalkDirectories(2, "config", ref output);
+            //output += "\t</Config>\r\n\r\n";
 
-            // CoreMods
-            output += "\t<CoreMods Mode=\"Identical\">\r\n";
-            WalkDirectories(2, "coremods", ref output);
-            output += "\t</CoreMods>\r\n\r\n";
+            // JarMods
+            output += "\t<JarMods Mode=\"Identical\">\r\n";
+            WalkDirectories(2, "jarmods", ref output);
+            output += "\t</JarMods>\r\n\r\n";
 
             // Mods
             output += "\t<Mods Mode=\"Identical\">\r\n";
             WalkDirectories(2, "mods", ref output);
             output += "\t</Mods>\r\n\r\n";
+
+            // Flan
+            output += "\t<Flan Mode=\"Identical\">\r\n";
+            WalkDirectories(2, "Flan", ref output);
+            output += "\t</Flan>\r\n\r\n";
 
             output += "</MCPatcher>";
 
